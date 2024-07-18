@@ -22,14 +22,14 @@ public class AqDataComponent extends AqDataStub {
 	 * Copied from {@link ghidra.program.database.code.DataDB#getComponent(int)}
 	 */
 	public AqDataComponent(Data parent, int index) {
-		super(Objects.requireNonNull(parent), 
-				getComponantDataTypeFromParent(parent, index), 
+		super(Objects.requireNonNull(parent),
+				getComponantDataTypeFromParent(parent, index),
 				parent.getProgram());
-		
+
 		validateIndex(parent, index);
 		mComponantIndex = index;
 		DataType parentDataType = parent.getBaseDataType();
-		
+
 		if (parentDataType instanceof Array array) {
 			mComponentType = null;
 			mOffset = index * array.getElementLength();
@@ -37,7 +37,7 @@ public class AqDataComponent extends AqDataStub {
 		else if (parentDataType instanceof Composite composite) {
 			mComponentType = composite.getComponent(index);
 			mOffset = mComponentType.getOffset();
-			
+
 		}
 //		else if (baseDataType instanceof DynamicDataType) {
 //			DynamicDataType ddt = (DynamicDataType) baseDataType;
@@ -50,24 +50,24 @@ public class AqDataComponent extends AqDataStub {
 			throw new IllegalArgumentException("Unsupported Parent DataType. Got: " + parentDataType.toString());
 		}
 	}
-	
+
 	private static void validateIndex(Data parent, int index) {
-		
+
 		if (index < 0 || index >= parent.getNumComponents()) {
 			throw new IndexOutOfBoundsException(
-					"Allowed Range: [0, " 
-					+ Integer.toString(parent.getNumComponents()) 
-					+ "], got = " 
+					"Allowed Range: [0, "
+					+ Integer.toString(parent.getNumComponents())
+					+ "], got = "
 					+ Integer.toString(index));
 		}
 	}
-	
+
 	private static DataType getComponantDataTypeFromParent(Data parent, int index) {
 
 		Objects.requireNonNull(parent);
 		validateIndex(parent, index);
 		DataType baseDataType = parent.getBaseDataType();
-		
+
 		if (baseDataType instanceof Array) {
 			Array array = (Array) baseDataType;
 			return array.getDataType();
@@ -200,7 +200,7 @@ public class AqDataComponent extends AqDataStub {
 	public byte getByte(int n) throws MemoryAccessException {
 		return getParent().getByte(mOffset + n);
 	}
-	
+
 	@Override
 	public boolean isBigEndian() {
 		return getParent().isBigEndian();
@@ -221,5 +221,10 @@ public class AqDataComponent extends AqDataStub {
 			return mComponentType.getDefaultSettings();
 		}
 		return super.getDefaultSettings();
+	}
+
+	@Override
+	public boolean isWritable() {
+		return getParent().isWritable();
 	}
 }

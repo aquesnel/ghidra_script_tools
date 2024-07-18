@@ -17,14 +17,14 @@ public abstract class AqDataStub implements Data, MixinDataSettings, MixinStubDa
 	private final Optional<Data> mParent;
 	private final DataType mDataType;
 	private final Program mProgram;
-	
+
 	public AqDataStub(Data parent, DataType dataType, Program program) {
 
 		mParent = Optional.ofNullable(parent);
 		mDataType = Objects.requireNonNull(dataType);
 		mProgram = Objects.requireNonNull(program);
 	}
-	
+
 	@Override
 	public int getLength() {
 		return mDataType.getLength();
@@ -51,15 +51,20 @@ public abstract class AqDataStub implements Data, MixinDataSettings, MixinStubDa
 	}
 
 	@Override
+	public boolean isWritable() {
+		return mParent.map(Data::isWritable).orElse(false);
+	}
+
+	@Override
 	public Data getParent() {
 		return mParent.orElse(null);
 	}
-	
+
 	@Override
 	public Data getDataForSettings() {
 		return this;
 	}
-	
+
 	/**
 	 * Copied from {@link ghidra.program.database.code.DataDB#getNumComponents()}
 	 */
@@ -68,7 +73,7 @@ public abstract class AqDataStub implements Data, MixinDataSettings, MixinStubDa
 		if (getLength() < mDataType.getLength()) {
 			return -1;
 		}
-		
+
 		DataType baseDataType = getBaseDataType();
 		if (baseDataType  instanceof Composite) {
 			return ((Composite) baseDataType).getNumComponents();
@@ -92,7 +97,7 @@ public abstract class AqDataStub implements Data, MixinDataSettings, MixinStubDa
 
 	@Override
 	public Data getComponent(int index) {
-		
+
 		return new AqDataComponent(this, index);
 	}
 
@@ -118,7 +123,7 @@ public abstract class AqDataStub implements Data, MixinDataSettings, MixinStubDa
 			return 0;
 		}
 	}
-	
+
 	@Override
 	public Object getValue() {
 		return DataUtils.getValue(this);

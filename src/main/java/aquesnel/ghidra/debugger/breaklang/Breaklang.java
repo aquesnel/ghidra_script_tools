@@ -7,8 +7,8 @@ import java.util.concurrent.TimeoutException;
 
 import aquesnel.ghidra.utils.FlatDebuggerAPIUtils;
 import ghidra.app.script.GhidraScript;
-import ghidra.app.services.LogicalBreakpoint;
 import ghidra.dbg.target.TargetExecutionStateful.TargetExecutionState;
+import ghidra.debug.api.breakpoint.LogicalBreakpoint;
 import ghidra.debug.flatapi.FlatDebuggerAPI;
 import ghidra.program.model.address.Address;
 import ghidra.trace.model.Trace;
@@ -17,7 +17,7 @@ public class Breaklang {
 
 	private static final boolean FORCE_VERBOSE = false;
 	private static final boolean ENABLE_MESSAGE_PREFIX = false;
-	
+
 	public static void runBreaklangLoop(GhidraScript script) throws Exception {
 		FlatDebuggerAPI debugger = FlatDebuggerAPIUtils.fromScript(script);
 		/**
@@ -27,7 +27,7 @@ public class Breaklang {
 		 * target behaves in an unexpected way, this may fail. One example is targets without an
 		 * initial break. If Ghidra does not recognize the target platform, this will fail. Etc.,
 		 * etc., this may fail.
-		 * 
+		 *
 		 * In the event of failure, nothing is cleaned up automatically, since in some cases, the
 		 * user may be expected to intervene. In our case; however, there's no way to continue this
 		 * script on a repaired target, so we'll close the connection on failure. An alternative
@@ -35,7 +35,7 @@ public class Breaklang {
 		 * would just operate on the "current target."
 		 */
 //		script.println("Launching " + script.getCurrentProgram());
-		Trace trace = FlatDebuggerAPIUtils.launchOrGetCurrentTrace(script).getTrace();
+		Trace trace = FlatDebuggerAPIUtils.launchOrGetCurrentTrace(script);
 //		script.println("Successfully launched in trace " + trace);
 
 		/**
@@ -47,11 +47,11 @@ public class Breaklang {
 		 * database, but the breakpoint service may still be processing the new mapping.
 		 */
 		debugger.flushAsyncPipelines(trace);
-		
+
 //		script.println("Program Type: " + script.getCurrentProgram().getClass().getName());
 //		script.println("Trace Type: " + trace.getClass().getName());
 //		script.println("Trace Program Type: " + trace.getProgramView().getClass().getName());
-//		
+//
 //		script.println("Address spaces ProgramDB:");
 //		for (AddressSpace a : script.getCurrentProgram().getAddressFactory().getAllAddressSpaces()) {
 //			script.print(a.toString());
@@ -76,8 +76,8 @@ public class Breaklang {
 //			script.print("\n");
 //		}
 //		script.println("---");
-		
-		
+
+
 		/**
 		 * This runs the target, recording memory around the PC and SP at each break, until it
 		 * terminates.
@@ -85,10 +85,10 @@ public class Breaklang {
 		try
 		{
 			int breakCount = 0;
-			BreaklangEvaluator.EvaluationContext context = 
+			BreaklangEvaluator.EvaluationContext context =
 					new BreaklangEvaluator.EvaluationContext(script);
 			BreaklangParser parser = new BreaklangParser();
-			
+
 			Optional<LogicalBreakpoint> initialBreakpoint = FlatDebuggerAPIUtils.getCurrentBreakpoint(script);
 			TargetExecutionState executionState = debugger.getExecutionState(trace);
 			script.println("target status: " + executionState);
@@ -101,10 +101,10 @@ public class Breaklang {
 				resumeScript(script, debugger, context);
 				debugger.flushAsyncPipelines(trace);
 			}
-			
+
 			while (debugger.isTargetAlive()
 					&& !script.getMonitor().isCancelled()) {
-				
+
 				/**
 				 * The recorder is going to schedule some reads upon break, so let's allow them to
 				 * settle.
@@ -123,27 +123,27 @@ public class Breaklang {
 				Address pcDynamic = debugger.getProgramCounter();
 				Address pcStatic = debugger.translateDynamicToStatic(pcDynamic);
 				Optional<LogicalBreakpoint> optBreakpoint = FlatDebuggerAPIUtils.getCurrentBreakpoint(script);
-								
+
 				if (optBreakpoint.isEmpty()) {
 					script.println(msgPrefix + "Non-Breaklang breakpoint at PC = " + pcDynamic + " (dynamic) / " + pcStatic + " (static)");
 					script.println(msgPrefix + "--- Breaking ---");
 					break;
-				
+
 				} else {
 					LogicalBreakpoint breakpoint = optBreakpoint.get();
 					String breakpointName = breakpoint.getName();
-					
+
 					try {
 						BreaklangParseResult parseResult = parser.parse(breakpointName);
 						BreaklangEvaluator.evaluateParseResult(context, parseResult);
 						if (FORCE_VERBOSE) {
 							context.withVerbose(true);
 						}
-						
+
 						if (context.verbose()) {
 							script.println(msgPrefix + "Breakpoint at PC = " + pcDynamic + " (dynamic) / " + pcStatic + " (static)" + " | " + breakpointName);
 						}
-						
+
 						if (parseResult.parseComment()) {
 							Optional<String> comment = FlatDebuggerAPIUtils.getCurrentPreComment(script);
 							if (context.verbose()) {
@@ -153,7 +153,7 @@ public class Breaklang {
 								boolean breakpointIsBreak = context.isBreak();
 								boolean breakpointVerbose = context.verbose();
 								String breakpointMessage = context.message();
-								
+
 								try {
 									parseResult = parser.parse(comment.get());
 									BreaklangEvaluator.evaluateParseResult(context, parseResult);
@@ -163,7 +163,7 @@ public class Breaklang {
 											"Processing Breaklang PreComment with PC = " + pcDynamic + " (dynamic) / " + pcStatic + " (static)" + " | " + comment.orElse("<none>"),
 											e);
 								}
-								
+
 								context.withBreak(breakpointIsBreak && context.isBreak());
 								context.withVerbose(breakpointVerbose || context.verbose());
 								context.withMessage(breakpointMessage + "\n" + context.message());
@@ -180,7 +180,7 @@ public class Breaklang {
 								e);
 					}
 				}
-				
+
 				if (context.isBreak()) {
 					if (context.verbose()) {
 						script.println(msgPrefix + "--- Breaking ---");
@@ -199,20 +199,20 @@ public class Breaklang {
 		}
 		script.println("Breaklang Terminated");
 	}
-	
+
 	private static void resumeScript(GhidraScript script, FlatDebuggerAPI debugger, BreaklangEvaluator.EvaluationContext context) throws InterruptedException {
-		
+
 //		boolean resumeresult = debugger.resume();
 //		Thread.sleep(10); // resume is async, and there is no API for waiting on it, so just try to sleep to let the resume happen
 //		script.println("resume status: " + Boolean.toString(resumeresult));
-		
+
 //		if (win32) {
 			String dbgEngOutput = debugger.executeCapture("g");
 			if (context.verbose()) {
 				script.println("[[dbgEng]] " + dbgEngOutput);
 			}
 //		}
-		
+
 //		debugger.executeCapture("-exec-continue");
 //		if (linux) {
 //			String gdbOutput = debugger.executeCapture("continue");
