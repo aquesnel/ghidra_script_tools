@@ -1,0 +1,138 @@
+/*
+ * For more details on building Java & JVM projects, please refer to https://docs.gradle.org/8.9/userguide/building_java_projects.html in the Gradle documentation.
+ */
+
+plugins {
+    // Apply the java-library plugin for API and implementation separation.
+    id("java-library")
+    // eclipse IDE plugin with annotation processing
+    //id "eclipse"
+    id("com.diffplug.eclipse.apt").version("3.44.0")
+    // code formatter plugin
+    id("com.diffplug.spotless").version("6.25.0")
+}
+
+//----------------------START "DO NOT MODIFY" SECTION------------------------------
+def ghidraInstallDir
+if (project.hasProperty("GHIDRA_INSTALL_DIR")) {
+	ghidraInstallDir = project.getProperty("GHIDRA_INSTALL_DIR")
+}
+
+if (ghidraInstallDir) {
+	apply from: new File(ghidraInstallDir).getCanonicalPath() + "/support/buildExtension.gradle"
+}
+else {
+	throw new GradleException("GHIDRA_INSTALL_DIR is not defined! Run the Gradle command with '-Dorg.gradle.project.GHIDRA_INSTALL_DIR=C:\\path\\to\\Ghidra'")
+}
+//----------------------END "DO NOT MODIFY" SECTION-------------------------------
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor("io.soabase.record-builder:record-builder-processor:41")
+    compileOnly("io.soabase.record-builder:record-builder-core:41")
+    
+    implementation("com.google.guava:guava:31.1-jre")
+        
+    testImplementation("org.hamcrest:hamcrest:2.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks.named("test") {
+    useJUnitPlatform()
+}
+
+spotless {
+  	java {
+    	googleJavaFormat()
+  	}
+}
+
+
+def updateProps(String path, Closure closure = {}) {
+	def properties = new Properties()
+	file(path).withReader { reader ->
+		properties.load(reader)
+	}
+	closure.call(properties)
+	file(path).withWriter('utf-8') { writer -> 
+  		properties.store(writer, "");
+  	} 
+}
+
+eclipse {
+    project {
+        natures("org.eclipse.jdt.core.javanature")
+        buildCommand("org.eclipse.jdt.core.javabuilder")
+        
+        natures("org.eclipse.buildship.core.gradleprojectnature")
+        buildCommand("org.eclipse.buildship.core.gradleprojectbuilder")
+    }
+    classpath {
+        file.whenMerged { cp ->
+
+			// Add source path for all Ghidra jar files that use the "-src.zip" convention
+        	cp.entries.forEach { cpEntry ->
+        		if(cpEntry instanceof org.gradle.plugins.ide.eclipse.model.Library) {
+        			if (cpEntry.library.file.toPath().startsWith(ghidraInstallDir)) {
+        				def sourceZip = file(cpEntry.library.path.replaceFirst(~'.jar$', "-src.zip"))
+        				if (sourceZip.exists()) {
+        					cpEntry.sourcePath = fileReference(sourceZip)
+        				}
+    				}
+        		}
+        	}
+        	
+        	// Add annotation processing generated source directories to the class path
+//            cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder("build/generated/sources/annotationProcessor/java/main", null) )
+			cp.entries.add( new org.gradle.plugins.ide.eclipse.model.SourceFolder(".apt_generated", null) )
+        }
+    }
+}
+tasks.eclipse.dependsOn(cleanEclipse)
+
+task generateEclipseGradleGhidra {
+    description 'Configures the Eclipse Gradle build command to reference the Ghidra install directory.'
+    doLast {
+        updateProps ".settings/org.eclipse.buildship.core.prefs", { props ->
+        	props.put("jvm.arguments", "-Dorg.gradle.project.GHIDRA_INSTALL_DIR=" + new File(ghidraInstallDir).getCanonicalPath());
+        }
+    }
+}
+tasks.eclipse.dependsOn(generateEclipseGradleGhidra)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
