@@ -5,11 +5,15 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id("java-library")
+    // publishing the built artifacts for local development
+    id("maven-publish")
     // eclipse IDE plugin with annotation processing
     //id "eclipse"
     id("com.diffplug.eclipse.apt").version("3.44.0")
     // code formatter plugin
     id("com.diffplug.spotless").version("6.25.0")
+    // Gradle task dependency graph visualizer
+    //id("com.dorongold.task-tree").version("4.0.0")
 }
 
 //----------------------START "DO NOT MODIFY" SECTION------------------------------
@@ -27,6 +31,8 @@ else {
 //----------------------END "DO NOT MODIFY" SECTION-------------------------------
 
 repositories {
+	// prioritize the local maven repo for local development dependencies
+	mavenLocal()
     // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
@@ -46,18 +52,36 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+    withJavadocJar()
+    withSourcesJar()
 }
+// ghidra adds a 'buildHelp' task that generates sources and needs to be built before the sources can be packaged
+tasks.sourcesJar.dependsOn('buildHelp')
+
 
 tasks.named("test") {
     useJUnitPlatform()
 }
 
+/*
+TODO: once code is ready for spotless then enable this
 spotless {
   	java {
     	googleJavaFormat()
   	}
 }
-
+*/
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = 'aquesnel.ghidra'
+            artifactId = 'ghidra.script.tools'
+            version = "0.0.1"
+            from components.java
+        }
+    }
+}
+tasks.build.dependsOn(publishToMavenLocal)
 
 def updateProps(String path, Closure closure = {}) {
 	def properties = new Properties()
@@ -77,6 +101,8 @@ eclipse {
         
         natures("org.eclipse.buildship.core.gradleprojectnature")
         buildCommand("org.eclipse.buildship.core.gradleprojectbuilder")
+        
+        linkedResource name: 'Ghidra', type: '2', location: ghidraInstallDir
     }
     classpath {
         file.whenMerged { cp ->
@@ -85,6 +111,7 @@ eclipse {
         	cp.entries.forEach { cpEntry ->
         		if(cpEntry instanceof org.gradle.plugins.ide.eclipse.model.Library) {
         			if (cpEntry.library.file.toPath().startsWith(ghidraInstallDir)) {
+        				// TODO: should I also add the standard maven nomenclature of "-sources.jar"? the two files have the same "*.java" content
         				def sourceZip = file(cpEntry.library.path.replaceFirst(~'.jar$', "-src.zip"))
         				if (sourceZip.exists()) {
         					cpEntry.sourcePath = fileReference(sourceZip)
