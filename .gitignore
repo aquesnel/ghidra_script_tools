@@ -24,13 +24,17 @@ hs_err_pid*
 replay_pid*
 
 # IDE
-.metadata/
-.settings/
-bin/
-.project
-.classpath
-.factorypath
+/.metadata/
+/.settings/
+/bin/
+/.project
+/.classpath
+/.factorypath
 
 # Gradle
 /.gradle/
 /build/
+
+# Ghidra build artifacts
+/dist/
+/lib/
