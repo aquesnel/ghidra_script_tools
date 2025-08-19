@@ -9,9 +9,9 @@ import com.google.common.collect.Lists;
 
 import aquesnel.collections.CopyableListIterator;
 
-/**
+/*
  * BNF of Breaklang:
- * 
+ *
  * expression := description? directive* print?
  * description := (anyChar | whitespace)+
  * directive := break | continue | verbose | printLocals | assignment
@@ -21,7 +21,7 @@ import aquesnel.collections.CopyableListIterator;
  * readExpr := "{" whitespace? ("#READ" whitespace)? rootStructRef structPath* arraySlice? "#TYPE"? whitespace? "}"
  * rootStructRef := registerName | breaklangVariableName | symbol | lazyLookupName
  * structPath := ("." | "->") fieldName | "*" | "[" numeric "]" | "&"
- * arraySlice := "[" numeric ":" numeric "]" 
+ * arraySlice := "[" numeric ":" numeric "]"
  * variableName := "#VAR:" alphaNumeric
  * symbol := "#SYM:" alphaNumeric
  * registerName := "#REG:" alphaNumeric
@@ -38,13 +38,13 @@ import aquesnel.collections.CopyableListIterator;
  */
 public final class BreaklangParser {
 
-	
+
 	public BreaklangParseResult parse(String input) {
-		CopyableListIterator<BreaklangToken> tokens = 
+		CopyableListIterator<BreaklangToken> tokens =
 				new CopyableListIterator<>(BreaklangTokenizer.parseTokens(CharBuffer.wrap(input)));//.listIterator();
 		return parseExpression(tokens);
 	}
-	
+
 	private BreaklangParseResult parseExpression(CopyableListIterator<BreaklangToken> tokens) {
 		List<BreaklangAssignmentDirective> assignments = new ArrayList<>();
 		boolean doBreak = true;
@@ -52,7 +52,7 @@ public final class BreaklangParser {
 		boolean printLocals = false;
 		boolean parseComment = false;
 		List<BreaklangPrintDirective> printDirective = new ArrayList<>();
-		
+
 		String description = parseDescription(tokens);
 		while(tokens.hasNext()) {
 			BreaklangToken token = tokens.next();
@@ -71,7 +71,7 @@ public final class BreaklangParser {
 				printDirective = parsePrint(tokens);
 			}
 //			case CHAR_END_OF_LINE -> {}
-			default -> 
+			default ->
 				throw new IllegalStateException("Expected a set/break/continue/verbose/print directive. Received: " + token.type());
 			}
 			consumeWhitespace(tokens);
@@ -102,23 +102,23 @@ public final class BreaklangParser {
 //		}
 		consumeExpectedToken(BreaklangTokenType.KEYWORD_SET, tokens);
 		consumeWhitespace(tokens);
-		
+
 //		BreaklangToken variableNameToken = tokens.next();
 //		if(variableNameToken.type() != BreaklangTokenType.CHAR_FIELD_NAME) {
 //			throw new IllegalStateException("Expected a CHAR_FIELD_NAME token. Received: " + variableNameToken.type());
 //		}
 		BreaklangToken variableNameToken = consumeExpectedToken(BreaklangTokenType.CHAR_FIELD_NAME, tokens);
 		consumeWhitespace(tokens);
-		
+
 //		BreaklangToken equalsToken = tokens.next();
 //		if(equalsToken.type() != BreaklangTokenType.CHAR_EQUALS) {
 //			throw new IllegalStateException("Expected a CHAR_EQUALS token. Received: " + equalsToken.type());
 //		}
 		consumeExpectedToken(BreaklangTokenType.CHAR_EQUALS, tokens);
 		consumeWhitespace(tokens);
-		
+
 		BreaklangReadExpression readExpression = parseReadExpression(tokens);
-		
+
 		return new BreaklangAssignmentDirective(variableNameToken.value().toString(), readExpression);
 	}
 
@@ -126,7 +126,7 @@ public final class BreaklangParser {
  * readExpr := "{" whitespace? ("#READ" whitespace)? rootStructRef structPath* arraySlice? "#TYPE"? whitespace? "}"
  * rootStructRef := registerName | breaklangVariableName | symbol | lazyLookupName
  * structPath := ("." | "->") fieldName | "*" | "[" numeric "]" | "&"
- * arraySlice := "[" numeric ":" numeric "]" 
+ * arraySlice := "[" numeric ":" numeric "]"
  * variableName := "#VAR:" alphaNumeric
  * symbol := "#SYM:" alphaNumeric
  * registerName := "#REG:" alphaNumeric
@@ -134,7 +134,7 @@ public final class BreaklangParser {
  * fieldName := (alphaNumeric | "_")+
 	 */
 	private BreaklangReadExpression parseReadExpression(CopyableListIterator<BreaklangToken> tokens) {
-		
+
 		// PARSE: `{`
 //		BreaklangToken openBraceToken = tokens.next();
 //		if(openBraceToken.type() != BreaklangTokenType.CHAR_OPEN_BRACE) {
@@ -152,7 +152,7 @@ public final class BreaklangParser {
 		else {
 //			throw new IllegalStateException("Expected a READ directive. Received: " + readToken.type());
 		}
-		
+
 		// PARSE: rootStructRef
 		BreaklangReadExpression readExpression;
 		BreaklangToken rootVariableToken = tokens.next();
@@ -174,12 +174,12 @@ public final class BreaklangParser {
 				tokens.previous();
 				readExpression = BreaklangReadExpression.fromLazyLookup(consumeFieldName(tokens));
 			}
-			default -> 
+			default ->
 				throw new IllegalStateException("Expected a REGISTER/SYMBOL/VARIABLE/FIELD_NAME directive. Received: " + rootVariableToken.type());
 		}
-		
+
 		// PARSE: structPath
-		STRUCT_PATH_LOOP: 
+		STRUCT_PATH_LOOP:
 		while(tokens.hasNext()) {
 			BreaklangToken token = tokens.next();
 			switch(token.type()) {
@@ -191,7 +191,7 @@ public final class BreaklangParser {
 			}
 			case KEYWORD_ARROW -> {
 				readExpression = BreaklangReadExpression.fromFieldLookup(
-						BreaklangReadExpression.fromDereference(readExpression), 
+						BreaklangReadExpression.fromDereference(readExpression),
 						consumeFieldName(tokens));
 			}
 			case CHAR_AMPERSAND -> {
@@ -199,7 +199,7 @@ public final class BreaklangParser {
 			}
 			case CHAR_OPEN_SQUARE_BRACKET -> {
 				int arrayIndex = consumeNumber(tokens);
-				
+
 				Optional<BreaklangToken> colonToken = tryConsumeToken(BreaklangTokenType.CHAR_COLON, tokens);
 				if (colonToken.isEmpty()) {
 					readExpression = BreaklangReadExpression.fromArrayLookup(readExpression, arrayIndex);
@@ -217,39 +217,39 @@ public final class BreaklangParser {
 				tokens.previous();
 				break STRUCT_PATH_LOOP;
 			}
-			
-			default -> 
+
+			default ->
 				throw new IllegalStateException("Expected a DOT/STAR/OPEN_SQUARE_BRACKET/CLOSE_BRACE token. Received: " + token.type());
 			}
 		}
-		
+
 		// PARSE: `#TYPE` optional
 		Optional<BreaklangToken> typeToken = tryConsumeToken(BreaklangTokenType.KEYWORD_TYPE, tokens);
 		if (typeToken.isPresent()) {
 			readExpression = BreaklangReadExpression.fromTypeInfo(readExpression);
 		}
-		
+
 		// PARSE: `}`
 		consumeExpectedToken(BreaklangTokenType.CHAR_CLOSE_BRACE, tokens);
 		return readExpression;
 	}
 
 	private List<BreaklangPrintDirective> parsePrint(CopyableListIterator<BreaklangToken> tokens) {
-		
+
 //		BreaklangToken printToken = tokens.next();
 //		if(printToken.type() != BreaklangTokenType.KEYWORD_PRINT) {
 //			throw new IllegalStateException("Expected a PRINT directive. Received: " + printToken.type());
 //		}
 		consumeExpectedToken(BreaklangTokenType.KEYWORD_PRINT, tokens);
 		consumeWhitespace(tokens);
-		
+
 		List<BreaklangPrintDirective> printExpressions = new ArrayList<>();
 		while(tokens.hasNext()) {
 			BreaklangToken token = tokens.next();
 //			if (token.type() == BreaklangTokenType.CHAR_END_OF_LINE) {
 //				break;
 //			}
-//			else 
+//			else
 			if (token.type() == BreaklangTokenType.CHAR_OPEN_BRACE) {
 				tokens.previous();
 				printExpressions.add(BreaklangPrintDirective.fromReadExpression(parseReadExpression(tokens)));
@@ -288,9 +288,9 @@ public final class BreaklangParser {
 			else {
 
 				CharSequence literal = token.value();
-				if (printExpressions.size() > 0 
+				if (printExpressions.size() > 0
 						&& printExpressions.get(printExpressions.size() - 1).type() == BreaklangPrintDirectiveType.LITERAL) {
-					
+
 					BreaklangPrintDirective prevPrintExpression = printExpressions.remove(printExpressions.size() - 1);
 					StringBuilder builder = new StringBuilder();
 					builder.append(prevPrintExpression.literal().get());
@@ -303,7 +303,7 @@ public final class BreaklangParser {
 		}
 		return printExpressions;
 	}
-	
+
 	private static void consumeWhitespace(CopyableListIterator<BreaklangToken> tokens) {
 		while(tokens.hasNext()) {
 			BreaklangToken token = tokens.next();
@@ -314,7 +314,7 @@ public final class BreaklangParser {
 			}
 		}
 	}
-	
+
 	private static String consumeFieldName(CopyableListIterator<BreaklangToken> tokens) {
 		StringBuilder builder = new StringBuilder();
 		while(tokens.hasNext()) {
@@ -332,17 +332,17 @@ public final class BreaklangParser {
 		}
 		return builder.toString();
 	}
-	
+
 	private int consumeNumber(CopyableListIterator<BreaklangToken> tokens) {
 		BreaklangToken numberToken = consumeExpectedToken(BreaklangTokenType.CHAR_NUMERIC, tokens);
 		return Integer.parseInt(numberToken.value().toString());
 	}
-	
+
 	private boolean tryParseDereference(CopyableListIterator<BreaklangToken> tokens)
 	{
 		return tryConsumeToken(BreaklangTokenType.CHAR_STAR, tokens).isPresent();
 	}
-	
+
 	private Optional<BreaklangToken> tryConsumeToken(BreaklangTokenType expectedTokenType, CopyableListIterator<BreaklangToken> tokens)
 	{
 		if(!tokens.hasNext()) {
@@ -357,7 +357,7 @@ public final class BreaklangParser {
 			return Optional.empty();
 		}
 	}
-	
+
 	private BreaklangToken consumeExpectedToken(BreaklangTokenType expectedTokenType, CopyableListIterator<BreaklangToken> tokens)
 	{
 		if(!tokens.hasNext()) {

@@ -82,7 +82,7 @@ public class MemoryData extends AqDataStub implements Data {
 //			bytes = debugger.readMemory(address, getDataType().getLength(), mScript.getMonitor());
 //			isBigEndian = getProgram().getMemory().isBigEndian();
 ////		
-////			> Error running script: TermminesPrintValues3.java
+////			> Error running script: BreaklangRun.java
 ////			java.lang.IllegalArgumentException: Address must be in memory or NO_ADDRESS. Got stack:
 ////				at ghidra.trace.database.space.DBTraceDelegatingManager.checkIsInMemory(DBTraceDelegatingManager.java:45)
 ////				at ghidra.trace.database.space.DBTraceDelegatingManager.delegateReadI(DBTraceDelegatingManager.java:126)
@@ -96,7 +96,7 @@ public class MemoryData extends AqDataStub implements Data {
 ////				at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluatePrintLocals(BreaklangEvaluator.java:231)
 ////				at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluateParseResult(BreaklangEvaluator.java:92)
 ////				at aquesnel.ghidra.debugger.breaklang.Breaklang.runBreaklangLoop(Breaklang.java:124)
-////				at TermminesPrintValues3.run(TermminesPrintValues3.java:16)
+////				at BreaklangRun.run(BreaklangRun.java:16)
 ////				at ghidra.app.script.GhidraScript.executeNormal(GhidraScript.java:399)
 ////				at ghidra.app.script.GhidraScript.doExecute(GhidraScript.java:254)
 ////				at ghidra.app.script.GhidraScript.execute(GhidraScript.java:232)
@@ -124,7 +124,7 @@ public class MemoryData extends AqDataStub implements Data {
 ////				at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluatePrintLocals(BreaklangEvaluator.java:231)
 ////				at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluateParseResult(BreaklangEvaluator.java:92)
 ////				at aquesnel.ghidra.debugger.breaklang.Breaklang.runBreaklangLoop(Breaklang.java:124)
-////				at TermminesPrintValues3.run(TermminesPrintValues3.java:16)
+////				at BreaklangRun.run(BreaklangRun.java:16)
 ////				at ghidra.app.script.GhidraScript.executeNormal(GhidraScript.java:399)
 ////				at ghidra.app.script.GhidraScript.doExecute(GhidraScript.java:254)
 ////				at ghidra.app.script.GhidraScript.execute(GhidraScript.java:232)
@@ -171,7 +171,7 @@ public class MemoryData extends AqDataStub implements Data {
 ////					at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluatePrintLocals(BreaklangEvaluator.java:231)
 ////					at aquesnel.ghidra.debugger.breaklang.BreaklangEvaluator.evaluateParseResult(BreaklangEvaluator.java:92)
 ////					at aquesnel.ghidra.debugger.breaklang.Breaklang.runBreaklangLoop(Breaklang.java:124)
-////					at TermminesPrintValues3.run(TermminesPrintValues3.java:16)
+////					at BreaklangRun.run(BreaklangRun.java:16)
 ////					at ghidra.app.script.GhidraScript.executeNormal(GhidraScript.java:399)
 ////					at ghidra.app.script.GhidraScript.doExecute(GhidraScript.java:254)
 ////					at ghidra.app.script.GhidraScript.execute(GhidraScript.java:232)
